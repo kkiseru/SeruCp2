@@ -1,0 +1,8 @@
+prefix=/home/jetauto/Desktop/seruCP2/devel
+
+Name: serucp2
+Description: Description of serucp2
+Version: 0.0.1
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

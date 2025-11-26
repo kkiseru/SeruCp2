@@ -1,0 +1,8 @@
+prefix=/home/jetauto/Desktop/seruCP2/install
+
+Name: jetauto_movement
+Description: Description of jetauto_movement
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

@@ -1,0 +1,3 @@
+`catkin_make` in this folder
+export ROS_MASTER_URI=http://localhost:11311
+source /home/jetauto/jetauto_workshop/devel/setup.sh
