@@ -1,0 +1,8 @@
+prefix=/home/jetauto/Desktop/seruCP2/install
+
+Name: jetauto_bringup
+Description: Description of jetauto_bringup
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

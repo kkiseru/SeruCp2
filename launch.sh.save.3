@@ -1,0 +1,356 @@
+#!/bin/bash
+# System - Master Launch Script
+################################################################################
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+ROBOT_NAME="jetauto_1"
+SLAM_METHOD="rtabmap"
+LOG_DIR="$HOME/.jetauto_delivery/logs"
+
+mkdir -p "$LOG_DIR"
+
+### STEP 0 — Environment setup
+echo "Sourcing ROS Melodic environment..."
+source /opt/ros/melodic/setup.bash
+source ~/jetauto_ws/devel/setup.bash
+
+export ROS_MASTER_URI=http://localhost:11311
+echo "ROS_MASTER_URI=$ROS_MASTER_URI"
+echo "ROS_HOSTNAME=$ROS_HOSTNAME"
+
+cleanup() {
+    echo ""
+    echo -e "${RED}⚠️  Caught Ctrl+C — stopping all ROS processes...${NC}"
+    pkill -f roscore
+    pkill -f roslaunch
+    pkill -f rosmaster
+    pkill -f rviz
+    pkill -f object_detection
+    echo -e "${GREEN}✅ All background ROS nodes terminated.${NC}"
+    exit 0
+}
+trap cleanup SIGINT SIGTERM
+
+################################################################################
+# UTILITY FUNCTIONS
+################################################################################
+
+print_header() {
+    echo -e "${BLUE}========================================${NC}"
+    echo -e "${BLUE}$1${NC}"
+    echo -e "${BLUE}========================================${NC}"
+}
+
+print_success() {
+    echo -e "${GREEN}✓ $1${NC}"
+}
+
+print_error() {
+    echo -e "${RED}✗ $1${NC}"
+}
+
+print_info() {
+    echo -e "${YELLOW}→ $1${NC}"
+}
+
+################################################################################
+# KILL LEFTOVER ROSCORE
+################################################################################
+
+kill_leftover_roscore() {
+    print_info "Checking for existing roscore..."
+    if pgrep -x "roscore" > /dev/null; then
+        print_info "Old roscore detected. Killing..."
+        pkill -9 roscore
+        pkill -9 rosmaster
+        sleep 2
+        print_success "Old roscore killed"
+    else
+        print_success "No previous roscore running"
+    fi
+}
+
+################################################################################
+# START ROSCORE
+################################################################################
+
+start_roscore() {
+    print_info "Starting roscore..."
+    roscore > /tmp/roscore.log 2>&1 &
+    sleep 5
+    if ! pgrep -x "roscore" > /dev/null; then
+        print_error "Failed to start roscore. Check /tmp/roscore.log"
+        exit 1
+    fi
+    print_success "roscore started successfully"
+}
+
+################################################################################
+# MAPPING PHASE - JOYSTICK CONTROLLED (RTABMAP)
+################################################################################
+
+slam_launch() {
+    print_header "Mapping Phase - Joystick Control (RTABMap)"
+    
+    kill_leftover_roscore
+    start_roscore
+    
+    print_info "Stopping JetAuto app service..."
+    sudo systemctl stop start_app_node.service
+    sleep 2
+    print_success "App service stopped"
+    
+    print_info "Launching SLAM service..."
+    roslaunch jetauto_slam slam.launch slam_methods:=rtabmap &
+    sleep 2
+    
+    print_info "Launching RViz visualization..."
+    roslaunch jetauto_slam rviz_slam.launch slam_methods:=rtabmap &
+    sleep 2
+    
+    print_success "Mapping phase started"
+    print_info "Use joystick to drive robot through delivery area"
+    print_info "RViz is running and displaying point cloud in real-time"
+    print_info ""
+    
+    # Keep script alive until Ctrl+C is pressed
+    while true; do
+        sleep 1
+    done
+}
+
+################################################################################
+# MAPPING PHASE - JOYSTICK CONTROLLED (GMAPPING)
+################################################################################
+
+gmap_launch(){
+    print_header "Mapping Phase - Joystick Control (Gmapping)"
+    
+    kill_leftover_roscore 
+    start_roscore
+    sleep 2
+    
+    print_info "Stopping JetAuto app service..."
+    sudo systemctl stop start_app_node.service
+    sleep 2
+    print_success "App service stopped"
+    
+    print_info "Launching SLAM service..."
+    roslaunch jetauto_slam slam.launch slam_methods:=gmapping &
+    sleep 2
+    
+    print_info "Launching RViz visualization..."
+    roslaunch jetauto_slam rviz_slam.launch slam_methods:=gmapping &
+    sleep 2
+    
+    print_info "Launching joystick controller..."
+    roslaunch jetauto_peripherals joystick_control.launch &
+    sleep 2
+    
+    print_success "Mapping phase started"
+    print_info "Use joystick to drive robot through delivery area"
+    print_info "RViz is running and displaying the map in real-time"
+    print_info ""
+    
+    # Keep script alive until Ctrl+C is pressed
+    while true; do
+        sleep 1
+    done
+}
+
+################################################################################
+# SAVE MAP
+################################################################################
+
+save_map(){
+    print_header "Saving Map"
+    
+    roscd jetauto_slam/maps
+    print_info "Saving map to ~/Desktop/seruCP2/src/jetauto_slam/maps/my_map..."
+    rosrun map_server map_saver -f my_map map:=/jetauto_1/map
+    
+    print_success "Map saved successfully"
+    print_info ""
+    
+    # Keep script alive until Ctrl+C is pressed
+    while true; do
+        sleep 1
+    done
+}
+
+################################################################################
+# NAVIGATION PHASE (GMAPPING)
+################################################################################
+
+gmap_navi(){
+    print_header "Navigation Phase - Autonomous Delivery (Gmapping)"
+    
+    kill_leftover_roscore
+    start_roscore
+    sleep 2
+
+    print_info "Stopping JetAuto app service..."
+    sudo systemctl stop start_app_node.service
+    sleep 2
+    print_success "App service stopped"
+
+    print_info "Launching navigation service..."
+   roslaunch jetauto_navigation navigation.launch map_file:=/home/jetauto/CP2/src/jetauto_slam/maps/my_map.yaml & sleep 3
+    
+    print_info "Launching RViz navigation..."
+    roslaunch jetauto_navigation rviz_navigation.launch &
+    sleep 3
+    
+    print_success "Navigation phase started"
+    print_info "Set pose: Use '2D Pose Estimate' to initialize robot position"
+    print_info "Set goal: Use '2D Nav Goal' to set delivery destination"
+    print_info ""
+    
+    # Keep script alive until Ctrl+C is pressed
+    while true; do
+        sleep 1
+    done
+}
+
+################################################################################
+# G_AUTOSLAM - GMAPPING WITH EXPLORATION
+################################################################################
+
+g_autoslam_launch() {
+    print_header "G_AutoSLAM - Gmapping with Exploration"
+    
+    kill_leftover_roscore
+    start_roscore
+    sleep 2
+    
+    print_info "Stopping JetAuto app service..."
+    sudo systemctl stop start_app_node.service
+    sleep 2
+    print_success "App service stopped"
+
+    print_info "Launching G_AutoSLAM (gmapping with exploration)..."
+    roslaunch g_autoslam slam_explore.launch slam_methods:=gmapping &
+    sleep 2
+    
+    print_info "Launching RViz with G_AutoSLAM visualization..."
+    roslaunch g_autoslam rviz_slam.launch slam_methods:=gmapping &
+    sleep 2
+    
+    print_success "G_AutoSLAM started"
+    print_info "Robot is exploring and building the map. Use the joystick to control the robot if needed."
+    print_info "RViz is running and displaying the SLAM process in real-time."
+    print_info ""
+    
+    # Keep script alive until Ctrl+C is pressed
+    while true; do
+        sleep 1
+    done
+}
+
+################################################################################
+# NAVIGATION PHASE (RTABMAP)
+################################################################################
+
+navi_launch() {
+    print_header "Navigation Phase - Autonomous Delivery (RTABMap)"
+    
+    kill_leftover_roscore
+    start_roscore
+    sleep 2
+
+    print_info "Stopping JetAuto app service..."
+    sudo systemctl stop start_app_node.service
+    sleep 2
+    print_success "App service stopped"
+    
+    print_info "Launching navigation service..."
+    roslaunch jetauto_navigation rtabmap_navigation.launch &
+    sleep 3
+    
+    print_info "Launching RViz navigation..."
+    roslaunch jetauto_navigation rviz_rtabmap_navigation.launch &
+    sleep 3
+    
+    print_success "Navigation phase started"
+    print_info "Load map: Click Rtabmap_cloud → Download namespace: jetauto_1/rtabmap → Download map"
+    print_info "Set pose: Use '2D Pose Estimate' to initialize robot position"
+    print_info "Set goal: Use '2D Nav Goal' to set delivery destination"
+    print_info ""
+    
+    # Keep script alive until Ctrl+C is pressed
+    while true; do
+        sleep 1
+    done
+}
+
+################################################################################
+# SAVE POINTS PHASE
+################################################################################
+
+save_points_launch() {
+    print_header "Save Points Phase"
+    
+    kill_leftover_roscore
+    start_roscore
+    sleep 2
+
+    print_info "Stopping JetAuto app service..."
+    sudo systemctl stop start_app_node.service
+    sleep 2
+    print_success "App service stopped"
+
+    print_info "Starting save_point_node to save robot position with names..."
+    rosrun jetauto_position save_point_node.py &
+    sleep 2
+    
+    print_success "Save points service started"
+    print_info ""
+    
+    # Keep the script running until Ctrl+C is pressed
+    while true; do
+        sleep 1
+    done
+}
+
+################################################################################
+# MENU & MAIN
+################################################################################
+
+show_menu() {
+    print_header "JetAuto Delivery System"
+    echo ""
+    echo "Commands:"
+    echo "  rtabmap              Start mapping (RTABMap - joystick controlled)"
+    echo "  gmap                 Start mapping (Gmapping - joystick controlled)"
+    echo "  gnavi                Start navigation (Gmapping - autonomous)"
+    echo "  g_autoslam           Start mapping with G_AutoSLAM (gmapping with exploration)"
+    echo "  save                 Save the current map"
+    echo "  rtabnavi             Start autonomous navigation (RTABMap)"
+    echo "  savepoint            Save points and name them"
+    echo "  help                 Show this menu"
+    echo ""
+}
+
+main() {
+
+    [ $# -eq 0 ] && { show_menu; exit 0; }  # Show menu if no arguments
+    
+    case "$1" in
+        rtabmap) slam_launch ;;           # Start mapping (rtabmap)
+        gmap) gmap_launch ;;              # Start mapping (gmapping)
+        gnavi) gmap_navi ;;               # Start navigation (gmapping)
+        g_autoslam) g_autoslam_launch ;;  # Start G_AutoSLAM (gmapping with exploration)
+        save) save_map ;;                 # Save the map
+        rtabnavi) navi_launch ;;          # Start autonomous navigation (rtabmap)
+        savepoint) save_points_launch ;;  # Save points and name them
+        help) show_menu ;;                # Show the menu
+        *) print_error "Unknown command: $1"; show_menu; exit 1 ;;  # Handle invalid commands
+    esac
+}
+
+main "$@"  # Run the main function with the arguments passed to the script

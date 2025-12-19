@@ -1,0 +1,46 @@
+<launch>
+  <!-- Arguments -->
+  <arg name="map_file" default="map.yaml" />
+  <arg name="scan_topic" default="/scan" />
+  <arg name="base_frame" default="base_link" />
+  <arg name="odom_frame" default="odom" />
+  
+  <!-- Start gmapping node -->
+  <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
+    <!-- Input/Output topics -->
+    <remap from="scan" to="$(arg scan_topic)" />
+    <param name="base_frame" value="$(arg base_frame)" />
+    <param name="odom_frame" value="$(arg odom_frame)" />
+    
+    <!-- Map parameters -->
+    <param name="map_update_interval" value="5.0" />
+    <param name="maxUrange" value="16.0" />
+    <param name="sigma" value="0.05" />
+    <param name="kernelSize" value="1" />
+    <param name="lstep" value="0.05" />
+    <param name="astep" value="0.05" />
+    <param name="iterations" value="5" />
+    <param name="lsigma" value="0.075" />
+    <param name="ogain" value="3.0" />
+    <param name="lskip" value="0" />
+    <param name="srandom_time_seed" value="0" />
+    <param name="transform_publish_period" value="0.05" />
+    <param name="tf_delay" value="0.2" />
+    
+    <!-- Map size and resolution -->
+    <param name="xmin" value="-100.0" />
+    <param name="ymin" value="-100.0" />
+    <param name="xmax" value="100.0" />
+    <param name="ymax" value="100.0" />
+    <param name="delta" value="0.05" />
+    
+    <!-- Particle filter parameters -->
+    <param name="particles" value="30" />
+    <param name="resampleThreshold" value="0.5" />
+    <param name="temporalUpdate" value="-1.0" />
+    <param name="angularUpdate" value="0.436" />
+    <param name="linearUpdate" value="1.0" />
+    <param name="nrOfTightsCoupling" value="1" />
+    <param name="m_TIC_TACK_TOE" value="false" />
+  </node>
+</launch>

@@ -1,0 +1,31 @@
+%YAML:1.0
+---
+camera_name: calibration
+image_width: 640
+image_height: 480
+camera_matrix:
+   rows: 3
+   cols: 3
+   data: [ 5.7838995361328125e+02, 0., 3.1153579711914062e+02, 0., 0.,
+       5.7838995361328125e+02, 2.3982667541503906e+02, 0., 0. ]
+distortion_coefficients:
+   rows: 1
+   cols: 5
+   data: [ 0., 0., 0., 0., 0. ]
+distortion_model: plumb_bob
+rectification_matrix:
+   rows: 3
+   cols: 3
+   data: [ 1., 0., 0., 0., 1., 0., 0., 0., 1. ]
+projection_matrix:
+   rows: 3
+   cols: 4
+   data: [ 5.7838995361328125e+02, 0., 3.1153579711914062e+02, 0., 0.,
+       5.7838995361328125e+02, 2.3982667541503906e+02, 0., 0., 0., 1.,
+       0. ]
+local_transform:
+   rows: 3
+   cols: 4
+   data: [ 2.22044605e-16, 2.48677280e-16, 1., 2.88581476e-02, -1.,
+       -1.31510926e-04, 2.48677280e-16, 9.99999978e-03, 1.31510926e-04,
+       -1., 2.22044605e-16, 2.07091972e-01 ]

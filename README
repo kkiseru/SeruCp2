@@ -1,3 +1,75 @@
-`catkin_make` in this folder
+1. `catkin_make` in this folder
+2.
 export ROS_MASTER_URI=http://localhost:11311
+3.
 source /home/jetauto/jetauto_workshop/devel/setup.sh
+
+4. 
+*Kill rosmaster:**
+sudo lsof -i :11311
+sudo kill -9 <PID>
+sudo lsof -i :11311
+roslaunch jetauto_launch slam_exploration.launch`
+
+5. JetAuto SLAM Quick Start
+1. Stop the APP service:
+sudo systemctl stop start_app_node.service
+2. Open two terminals and run:
+
+Terminal 1:
+```bash
+roslaunch jetauto_slam slam.launch slam_methods:=gmapping
+```
+
+Terminal 2:
+```bash
+roslaunch jetauto_slam rviz_slam.launch slam_methods:=gmapping
+```
+
+## Mapping Options
+
+### Autonomous Exploration
+```bash
+roslaunch jetauto_launch slam_exploration.launch
+```
+Robot explores automatically and saves the map when done.
+
+### Keyboard Control
+```bash
+roslaunch jetauto_peripherals teleop_key_control.launch
+```
+
+### Joystick Control
+```bash
+roslaunch jetauto_peripherals joystick_control.launch
+```
+
+Then manually save:
+```bash
+roscd jetauto_slam/maps
+rosrun map_server map_saver -f my_map map:=/jetauto_1/map
+```
+
+### Option C: RViz Goals
+Use the "2D Nav Goal" tool in RViz to send the robot to specific locations.
+
+## Save Map
+
+**Service call method:**
+```bash
+rosservice call /map_save
+```
+
+**Manual method:**
+```bash
+roscd jetauto_slam/maps
+rosrun map_server map_saver -f map_name map:=/jetauto_1/map
+```
+
+## Stop
+```bash
+Ctrl+C
+```
+
+## Note
+Obstacle detection happens automatically during SLAM via Lidar.

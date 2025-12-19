@@ -1,0 +1,19 @@
+<launch>
+  <!-- Start gmapping (SLAM) -->
+  <include file="$(find g_autoslam)/launch/slam_gmapping.launch">
+    <arg name="map_file" value="map.yaml" />
+  </include>
+
+  <!-- Start frontier exploration (autonomous exploration) -->
+  <include file="$(find jetauto_slam)/launch/include/explore.launch">
+    <arg name="base_frame" value="base_footprint" />
+    <arg name="map_topic" value="map" />
+    <arg name="costmap_topic" value="map" />
+  </include>
+
+  <!-- Start move_base for path planning -->
+  <include file="$(find jetauto_navigation)/launch/include/move_base.launch" />
+
+  <!-- Launch RViz for gmapping visualization -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find g_autoslam)/rviz/gmapping.rviz" />
+</launch>

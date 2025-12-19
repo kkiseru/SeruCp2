@@ -1,0 +1,2 @@
+
+-DCATKIN_DEVEL_PREFIX=/home/jetauto/Desktop/seruCP2/src/g_autoslam/devel -DCMAKE_INSTALL_PREFIX=/home/jetauto/Desktop/seruCP2/src/g_autoslam/install -G Unix Makefiles

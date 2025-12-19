@@ -1,0 +1,5 @@
+roi:
+  x_max: 299
+  x_min: 279
+  y_max: 399
+  y_min: 379

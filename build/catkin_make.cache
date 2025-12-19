@@ -1,2 +1,2 @@
-jetauto_launch:jetauto_movement:jetauto_slam
+g_autoslam:jetauto_bringup:jetauto_example:jetauto_launch:jetauto_movement:jetauto_navigation:jetauto_peripherals:jetauto_slam
 -DCATKIN_DEVEL_PREFIX=/home/jetauto/Desktop/seruCP2/devel -DCMAKE_INSTALL_PREFIX=/home/jetauto/Desktop/seruCP2/install -G Unix Makefiles

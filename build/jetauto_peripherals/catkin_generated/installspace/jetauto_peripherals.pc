@@ -1,0 +1,8 @@
+prefix=/home/jetauto/Desktop/seruCP2/install
+
+Name: jetauto_peripherals
+Description: Description of jetauto_peripherals
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

@@ -1,0 +1,4 @@
+mkdir -p ~/Desktop/seruCP2/src/jetauto_navigation/scripts
+
+cat > ~/Desktop/seruCP2/src/jetauto_navigation/scripts/publish_point_node.py << 'EOF'
+

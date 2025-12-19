@@ -136,9 +136,14 @@ endif()
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
   include("/home/jetauto/Desktop/seruCP2/build/gtest/cmake_install.cmake")
+  include("/home/jetauto/Desktop/seruCP2/build/jetauto_bringup/cmake_install.cmake")
+  include("/home/jetauto/Desktop/seruCP2/build/jetauto_example/cmake_install.cmake")
   include("/home/jetauto/Desktop/seruCP2/build/jetauto_launch/cmake_install.cmake")
+  include("/home/jetauto/Desktop/seruCP2/build/jetauto_navigation/cmake_install.cmake")
+  include("/home/jetauto/Desktop/seruCP2/build/jetauto_peripherals/cmake_install.cmake")
   include("/home/jetauto/Desktop/seruCP2/build/jetauto_movement/cmake_install.cmake")
   include("/home/jetauto/Desktop/seruCP2/build/jetauto_slam/cmake_install.cmake")
+  include("/home/jetauto/Desktop/seruCP2/build/g_autoslam/cmake_install.cmake")
 
 endif()
 

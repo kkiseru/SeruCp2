@@ -1,0 +1,9 @@
+<launch>
+  <!-- Start gmapping (SLAM) -->
+  <include file="$(find g_autoslam)/launch/slam_gmapping.launch">
+    <arg name="map_file" value="map.yaml" />
+  </include>
+
+  <!-- Launch RViz with gmapping configuration -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find g_autoslam)/rviz/gmapping.rviz" />
+</launch>

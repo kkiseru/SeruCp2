@@ -1,0 +1,44 @@
+# yolo_human_detection.py
+
+#Install required packages:
+# pip install torch torchvision 
+# pip install yolov5 
+
+import torch
+import cv2
+import rospy
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
+from std_msgs.msg import String
+
+class YoloHumanDetection:
+    def __init__(self):
+        self.model = torch.hub.load('ultralytics/yolov5', 'yolov5s')  # Load YOLOv5 small model
+        self.bridge = CvBridge()
+        self.pub = rospy.Publisher('/human_detection_output', String, queue_size=10)
+        self.sub = rospy.Subscriber("/camera/color/image_raw", Image, self.callback)
+
+    def callback(self, msg):
+        try:
+            # Convert the ROS image message to OpenCV image
+            cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
+
+            # Perform inference with YOLOv5
+            results = self.model(cv_image)
+
+            # Filter detections for human class (class index for human is typically 0 in YOLO)
+            detections = results.pandas().xywh[results.pandas().xywh['class'] == 0]
+
+            # Print detections to ROS log
+            rospy.loginfo(f"Detections: {detections}")
+
+            # Send output as a ROS message (you can modify this to send other details as needed)
+            self.pub.publish(str(detections))
+
+        except Exception as e:
+            rospy.logerr(f"Error in callback: {e}")
+
+if __name__ == '__main__':
+    rospy.init_node('yolo_human_detection_node')
+    detection = YoloHumanDetection()
+    rospy.spin()
