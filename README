@@ -32,31 +32,56 @@ Before starting, ensure you have:
   - Motors
   - Computing unit (Jetson Nano or equivalent)
 ---
-
 ## Dependencies
 
 - **ROS 1** (Robot Operating System) - Tested on ROS Noetic
 - **Linux-based operating system** - Ubuntu 18.04 or later
 - **Properly configured catkin workspace** for ROS development
-- **Required Libraries:**
 
 ---
 
 ## Installing
 
-### Build the workspace
+### Clone the Repository
+
+Fork the code into your directory:
 
 ```bash
+cd ~/your_workspace/src
+git clone https://github.com/your-username/autonomous-campus-delivery-robot.git
+cd autonomous-campus-delivery-robot
+```
+
+### Build the Workspace
+
+```bash
+cd ~/your_workspace
 catkin_make
 ```
 
-### Set up the ROS environment
+### Set up the ROS Environment
+1. `catkin_make` in this folder
 
+2. Export ROS_MASTER_URI=http://localhost:<Your Local Host>
+
+3. Source the setup file:
 ```bash
-export ROS_MASTER_URI=http://localhost:[your_own_localhost]
+source ~/your_workspace/devel/setup.sh
 ```
 
-### Verify installation
+### Kill ROS Master (Important)
+
+Before running any SLAM or navigation commands, always ensure ROS Master is not already running. Kill any existing ROS processes:
+
+```bash
+sudo lsof -i :<Your Local Host>
+sudo kill -9 <PID>
+sudo lsof -i :<Your Local Host>
+```
+
+Replace `<PID>` with the actual process ID shown. The last command should return empty, indicating ROS Master is stopped.
+
+### Verify Installation
 
 ```bash
 rospack find gmapping
@@ -67,60 +92,43 @@ rostopic list
 
 ## Executing Program
 
-### Step 1: Stop Default Application Service
+All functionality is controlled through the `launch.sh` script. Run the script to see all available options:
 
 ```bash
-sudo systemctl stop start_app_node.service
+./launch.sh
 ```
 
-### Step 2: Launch SLAM (GMapping)
+### Available Commands
 
-Open two terminals.
-
-**Terminal 1 - Start SLAM Node:**
-
+**1. gmap** - Launch SLAM (GMapping)
 ```bash
-roslaunch jetauto_slam slam.launch slam_methods:=gmapping
+./launch.sh gmap
 ```
+Starts the GMapping SLAM algorithm and RViz visualization. The robot begins scanning and building a map of the environment.
 
-**Terminal 2 - Start RViz Visualization:**
-
+**2. save** - Save the Campus Map
 ```bash
-roslaunch jetauto_slam rviz_slam.launch slam_methods:=gmapping
+./launch.sh save
 ```
+Saves the currently built map to persistent storage (`.pgm` image file and `.yaml` configuration file).
 
-### Step 3: Autonomous Campus Mapping
-
+**3. gnavi** - SLAM with Navigation
 ```bash
-roslaunch jetauto_launch slam_exploration.launch
+./launch.sh gnavi
 ```
+Launches both GMapping SLAM and the navigation stack together. Enables autonomous navigation with the built map.
 
-The robot will autonomously map the campus. Monitor progress in RViz.
-
-### Step 4: Save the Campus Map
-
-**Using service call:**
-
+**4. delivery** - Delivery Phase
 ```bash
-rosservice call /map_save
+./launch.sh delivery
 ```
+Launches the autonomous delivery navigation system using a pre-built campus map. The robot uses saved map for localization and path planning.
 
-**Or manually:**
-
+**5. full** - Complete Workflow
 ```bash
-roscd jetauto_slam/maps
-rosrun map_server map_saver -f campus_map map:=/jetauto_1/map
+./launch.sh full
 ```
-
-### Step 5: Launch Autonomous Delivery Navigation
-
-```bash
-# Terminal 1: Localization with saved map
-roslaunch jetauto_slam slam_localization.launch map_file:=campus_map.yaml
-
-# Terminal 2: Navigation stack
-roslaunch jetauto_navigation move_base.launch
-```
+Runs the complete workflow automatically: launches GMapping SLAM and navigation, waits 20 seconds for initialization, then automatically transitions to delivery phase. Use this for end-to-end testing.
 
 ---
 
@@ -128,12 +136,12 @@ roslaunch jetauto_navigation move_base.launch
 
 ### Issue: ROS Master Already Running
 
-If ROS Master is stuck on port 11311:
+If ROS Master is stuck on port <Your Local Host>:
 
 ```bash
-sudo lsof -i :11311
+sudo lsof -i :<Your Local Host>
 sudo kill -9 <PID>
-sudo lsof -i :11311
+sudo lsof -i :<Your Local Host>
 ```
 
 Then relaunch:
@@ -158,15 +166,6 @@ sudo usermod -a -G dialout $USER
 sudo reboot
 ```
 
-### Issue: Poor Map Quality
-
-- Slow down exploration speed in configuration
-- Clean sensor lens and check mounting
-- Ensure adequate LiDAR visibility
-- Check particle count in gmapping parameters
-
----
-
 ## Authors
 
 **Seru**
@@ -183,8 +182,9 @@ This project is licensed for educational and research purposes. Refer to the LIC
 
 ## Acknowledgments
 
-- JetAuto Robotics Platform
-- ROS (Robot Operating System) Community
-- GMapping SLAM Algorithm
-- TEB Local Planner
-- Dijkstra Path Planning Algorithm
+- Hiwonder JetAuto Robotics Platform, Google Drive 
+- ROS Wiki
+
+
+
+
