@@ -48,7 +48,7 @@ Fork the code into your directory:
 
 ```bash
 cd ~/your_workspace/src
-git clone https://github.com/your-username/autonomous-campus-delivery-robot.git
+git clone https://github.com/kkiseru/SeruCp2.git
 cd autonomous-campus-delivery-robot
 ```
 
