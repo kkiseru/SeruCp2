@@ -1,75 +1,190 @@
-1. `catkin_make` in this folder
-2.
-export ROS_MASTER_URI=http://localhost:11311
-3.
-source /home/jetauto/jetauto_workshop/devel/setup.sh
+# Autonomous Campus Delivery Robot
 
-4. 
-*Kill rosmaster:**
-sudo lsof -i :11311
-sudo kill -9 <PID>
-sudo lsof -i :11311
-roslaunch jetauto_launch slam_exploration.launch`
+## Simple Overview of the Project
 
-5. JetAuto SLAM Quick Start
-1. Stop the APP service:
+This document presents the planning and implementation of an autonomous campus delivery robot aimed at addressing the logistical challenges created by the discontinuation of Sunway University's previous delivery system. The solution integrates SLAM technology with an efficient path planning approach and is developed on the ROS 1 platform, utilizing the pre-built HiWonder JetAuto hardware.
+
+This project demonstrates the use of ROS-based SLAM on the JetAuto robot using the GMapping algorithm for autonomous mapping, while implementing TEB and Dijkstra algorithms for intelligent path planning. It supports autonomous navigation, real-time visualization in RViz, and persistent map storage for reliable campus delivery operations.
+
+---
+
+## Table of Contents
+
+1. [Getting Started](#getting-started)
+2. [Dependencies](#dependencies)
+3. [Installing](#installing)
+4. [Executing Program](#executing-program)
+5. [Help](#help)
+6. [Authors](#authors)
+7. [License](#license)
+
+---
+
+## Getting Started
+
+This section will guide you through the initial setup and preparation for running the autonomous campus delivery robot.
+
+### Hardware Prerequisites
+
+Before starting, ensure you have:
+- **HiWonder JetAuto Kit** or a robot with the following components:
+  - LiDAR sensor
+  - Motors
+  - Computing unit (Jetson Nano or equivalent)
+---
+
+## Dependencies
+
+- **ROS 1** (Robot Operating System) - Tested on ROS Noetic
+- **Linux-based operating system** - Ubuntu 18.04 or later
+- **Properly configured catkin workspace** for ROS development
+- **Required Libraries:**
+
+---
+
+## Installing
+
+### Build the workspace
+
+```bash
+catkin_make
+```
+
+### Set up the ROS environment
+
+```bash
+export ROS_MASTER_URI=http://localhost:[your_own_localhost]
+```
+
+### Verify installation
+
+```bash
+rospack find gmapping
+rostopic list
+```
+
+---
+
+## Executing Program
+
+### Step 1: Stop Default Application Service
+
+```bash
 sudo systemctl stop start_app_node.service
-2. Open two terminals and run:
+```
 
-Terminal 1:
+### Step 2: Launch SLAM (GMapping)
+
+Open two terminals.
+
+**Terminal 1 - Start SLAM Node:**
+
 ```bash
 roslaunch jetauto_slam slam.launch slam_methods:=gmapping
 ```
 
-Terminal 2:
+**Terminal 2 - Start RViz Visualization:**
+
 ```bash
 roslaunch jetauto_slam rviz_slam.launch slam_methods:=gmapping
 ```
 
-## Mapping Options
+### Step 3: Autonomous Campus Mapping
 
-### Autonomous Exploration
 ```bash
 roslaunch jetauto_launch slam_exploration.launch
 ```
-Robot explores automatically and saves the map when done.
 
-### Keyboard Control
-```bash
-roslaunch jetauto_peripherals teleop_key_control.launch
-```
+The robot will autonomously map the campus. Monitor progress in RViz.
 
-### Joystick Control
-```bash
-roslaunch jetauto_peripherals joystick_control.launch
-```
+### Step 4: Save the Campus Map
 
-Then manually save:
-```bash
-roscd jetauto_slam/maps
-rosrun map_server map_saver -f my_map map:=/jetauto_1/map
-```
+**Using service call:**
 
-### Option C: RViz Goals
-Use the "2D Nav Goal" tool in RViz to send the robot to specific locations.
-
-## Save Map
-
-**Service call method:**
 ```bash
 rosservice call /map_save
 ```
 
-**Manual method:**
+**Or manually:**
+
 ```bash
 roscd jetauto_slam/maps
-rosrun map_server map_saver -f map_name map:=/jetauto_1/map
+rosrun map_server map_saver -f campus_map map:=/jetauto_1/map
 ```
 
-## Stop
+### Step 5: Launch Autonomous Delivery Navigation
+
 ```bash
-Ctrl+C
+# Terminal 1: Localization with saved map
+roslaunch jetauto_slam slam_localization.launch map_file:=campus_map.yaml
+
+# Terminal 2: Navigation stack
+roslaunch jetauto_navigation move_base.launch
 ```
 
-## Note
-Obstacle detection happens automatically during SLAM via Lidar.
+---
+
+## Help
+
+### Issue: ROS Master Already Running
+
+If ROS Master is stuck on port 11311:
+
+```bash
+sudo lsof -i :11311
+sudo kill -9 <PID>
+sudo lsof -i :11311
+```
+
+Then relaunch:
+
+```bash
+roslaunch jetauto_slam slam.launch slam_methods:=gmapping
+```
+
+### Issue: No Laser Scans Received
+
+Check if LiDAR is connected:
+
+```bash
+lsusb | grep LIDAR
+rostopic hz /scan
+```
+
+If permission issues:
+
+```bash
+sudo usermod -a -G dialout $USER
+sudo reboot
+```
+
+### Issue: Poor Map Quality
+
+- Slow down exploration speed in configuration
+- Clean sensor lens and check mounting
+- Ensure adequate LiDAR visibility
+- Check particle count in gmapping parameters
+
+---
+
+## Authors
+
+**Seru**
+
+📧 Email: 027.yunyi@gmail.com
+
+---
+
+## License
+
+This project is licensed for educational and research purposes. Refer to the LICENSE file for more details.
+
+---
+
+## Acknowledgments
+
+- JetAuto Robotics Platform
+- ROS (Robot Operating System) Community
+- GMapping SLAM Algorithm
+- TEB Local Planner
+- Dijkstra Path Planning Algorithm
